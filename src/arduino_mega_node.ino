@@ -23,7 +23,7 @@ void handle_Twist(const geometry_msgs::Twist &msg);
 
 ros::NodeHandle nh;
 
-ros::Subscriber<geometry_msgs::Twist> sub("/cmd_vel", &handle_Twist); // keyboard input subscriber
+ros::Subscriber<geometry_msgs::Twist> sub("/turtle1/cmd_vel", &handle_Twist); // keyboard input subscriber
 
 void setup()
 {
