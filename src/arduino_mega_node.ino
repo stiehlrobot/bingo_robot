@@ -16,8 +16,8 @@ const byte IN1_LEFT = 8;
 const byte IN2_LEFT = 9;
 const byte PWM_LEFT = 10;
 int STBY = 5; //standby
-bool move_forward_left = false;
-bool move_forward_right = false;
+bool move_forward_left = true;
+bool move_forward_right = true;
 
 void handle_Twist(const geometry_msgs::Twist &msg);
 
@@ -107,7 +107,7 @@ void setMotorRight(int motorSpeed, bool is_forward)
         digitalWrite(IN1_RIGHT, HIGH);
         digitalWrite(IN2_RIGHT, LOW);
     }
-    else if (is_forward)
+    else if (!is_forward)
     {
         digitalWrite(IN1_RIGHT, LOW);
         digitalWrite(IN2_RIGHT, HIGH);
@@ -128,7 +128,7 @@ void setMotorLeft(int motorSpeed, bool is_forward)
         digitalWrite(IN1_LEFT, HIGH);
         digitalWrite(IN2_LEFT, LOW);
     }
-    else if (is_forward)
+    else if (!is_forward)
     {
         digitalWrite(IN1_LEFT, LOW);
         digitalWrite(IN2_LEFT, HIGH);
