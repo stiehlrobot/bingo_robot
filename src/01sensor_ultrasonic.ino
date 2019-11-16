@@ -2,6 +2,8 @@
 
 /*
 Code for operating 5 ultrasonic sensors. Sensors are numbered 1 to 5 starting from left side of robots perspective. 
+Next steps is to implement as ros node on ardu:
+https://github.com/surabhi96/Library-navigating-robot/wiki/Ultrasonic-sensor-with-ROS
 */
 
 

@@ -19,21 +19,21 @@ void setup() {
 }
 void loop() {
     
-   analogWrite(9,230);    // set the motor_1 speed ;
+   analogWrite(9,115);    // set the motor_1 speed ;
    digitalWrite(4, HIGH);   
    digitalWrite(5, LOW);  // Set the rotation of motor_1
    
-   analogWrite(10,50);    // set the motor_2 speed ;
+   analogWrite(10,25);    // set the motor_2 speed ;
    digitalWrite(7, HIGH);  
    digitalWrite(8, LOW);  // Set the rotation of motor_1
  
   delay(5000);               // wait for a 5 seconds
   // And we change the motor speed and  rotation direction
-    analogWrite(9,100);    // set the motor_1 speed to 100 ;
+    analogWrite(9, 50);    // set the motor_1 speed to 100 ;
    digitalWrite(4, LOW);   
    digitalWrite(5, HIGH);  // Set the rotation of motor_1
    
-   analogWrite(10,150);    // set the motor_2 speed to 150
+   analogWrite(10,75);    // set the motor_2 speed to 150
    digitalWrite(7, LOW);  
    digitalWrite(8, HIGH);  // Set the rotation of motor_1
    delay(5000)               // wait for a 5 seconds
