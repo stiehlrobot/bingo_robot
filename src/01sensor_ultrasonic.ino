@@ -14,12 +14,16 @@ const int ultrasonic_3_trigPin = 26;
 const int ultrasonic_4_trigPin = 28;
 const int ultrasonic_5_trigPin = 30;
 
+triggerPins = {ultrasonic_1_trigPin, ultrasonic_2_trigPin, ultrasonic_3_trigPin, ultrasonic_4_trigPin, ultrasonic_5_trigPin};
+
 // defines echo pins
 const int ultrasonic_1_echoPin = 23;
 const int ultrasonic_2_echoPin = 25;
 const int ultrasonic_3_echoPin = 27;
 const int ultrasonic_4_echoPin = 29;
 const int ultrasonic_5_echoPin = 31;
+
+echoPins = {ultrasonic_1_echoPin, ultrasonic_2_echoPin, ultrasonic_3_echoPin, ultrasonic_4_echoPin, ultrasonic_5_echoPin};
 
 
 // defines duration variables
@@ -29,12 +33,17 @@ long duration3;
 long duration4;
 long duration5;
 
+
+durations = {duration1, duration2, duration3, duration4, duration5};
+
 // defines distance variables
 int distance1;
 int distance2;
 int distance3;
 int distance4;
 int distance5;
+
+distances = {distance1, distance2, distance3, distance4, distance5};
 
 void setup() {
 
@@ -61,6 +70,22 @@ void loop() {
 
 void fetch_ultrasonic_reading() {
 
+    //simplified approach with arrays
+    for (int i=0; i<5; i++) {
+
+        digitalWrite(triggerPins[i], LOW);
+        delayMicroseconds(2);
+        digitalWrite(triggerPins[i], HIGH);
+        delayMicroseconds(10);
+        digitalWrite(triggerPins[i], LOW);
+        duration = pulseIn(echoPins[i], HIGH);
+        distance = duration*0.034/2;
+        Serial.print("Distance: ");
+        Serial.println(distance);
+
+    }
+
+    /*
     //clear trigger pin to enhance reading
     digitalWrite(ultrasonic_1_trigPin, LOW);
     delayMicroseconds(2);
@@ -113,6 +138,6 @@ void fetch_ultrasonic_reading() {
     Serial.println(distance4);
     Serial.print("Distance5: ");
     Serial.println(distance5);
-
+    */
 
 }
