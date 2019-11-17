@@ -1,6 +1,8 @@
 
+#include <Arduino.h>
 
 /*
+Tested to work with five HC-SR04 US sensors
 Code for operating 5 ultrasonic sensors. Sensors are numbered 1 to 5 starting from left side of robots perspective. 
 Next steps is to implement as ros node on ardu:
 https://github.com/surabhi96/Library-navigating-robot/wiki/Ultrasonic-sensor-with-ROS
@@ -14,7 +16,7 @@ const int ultrasonic_3_trigPin = 26;
 const int ultrasonic_4_trigPin = 28;
 const int ultrasonic_5_trigPin = 30;
 
-triggerPins = {ultrasonic_1_trigPin, ultrasonic_2_trigPin, ultrasonic_3_trigPin, ultrasonic_4_trigPin, ultrasonic_5_trigPin};
+int triggerPins = {ultrasonic_1_trigPin, ultrasonic_2_trigPin, ultrasonic_3_trigPin, ultrasonic_4_trigPin, ultrasonic_5_trigPin};
 
 // defines echo pins
 const int ultrasonic_1_echoPin = 23;
@@ -23,7 +25,7 @@ const int ultrasonic_3_echoPin = 27;
 const int ultrasonic_4_echoPin = 29;
 const int ultrasonic_5_echoPin = 31;
 
-echoPins = {ultrasonic_1_echoPin, ultrasonic_2_echoPin, ultrasonic_3_echoPin, ultrasonic_4_echoPin, ultrasonic_5_echoPin};
+int echoPins = {ultrasonic_1_echoPin, ultrasonic_2_echoPin, ultrasonic_3_echoPin, ultrasonic_4_echoPin, ultrasonic_5_echoPin};
 
 
 // defines duration variables
