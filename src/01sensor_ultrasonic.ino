@@ -2,7 +2,6 @@
 #include <Arduino.h>
 
 /*
-Tested to work with five HC-SR04 US sensors
 Code for operating 5 ultrasonic sensors. Sensors are numbered 1 to 5 starting from left side of robots perspective. 
 Next steps is to implement as ros node on ardu:
 https://github.com/surabhi96/Library-navigating-robot/wiki/Ultrasonic-sensor-with-ROS
@@ -12,20 +11,23 @@ https://github.com/surabhi96/Library-navigating-robot/wiki/Ultrasonic-sensor-wit
 // defines trigger pins
 const int ultrasonic_1_trigPin = 22;
 const int ultrasonic_2_trigPin = 24;
-const int ultrasonic_3_trigPin = 26;
+const int ultrasonic_3_trigPin = 32;
 const int ultrasonic_4_trigPin = 28;
 const int ultrasonic_5_trigPin = 30;
 
-int triggerPins = {ultrasonic_1_trigPin, ultrasonic_2_trigPin, ultrasonic_3_trigPin, ultrasonic_4_trigPin, ultrasonic_5_trigPin};
+long duration;
+int distance;
+
+int triggerPins[] = {ultrasonic_1_trigPin, ultrasonic_2_trigPin, ultrasonic_3_trigPin, ultrasonic_4_trigPin, ultrasonic_5_trigPin};
 
 // defines echo pins
 const int ultrasonic_1_echoPin = 23;
 const int ultrasonic_2_echoPin = 25;
-const int ultrasonic_3_echoPin = 27;
+const int ultrasonic_3_echoPin = 33;
 const int ultrasonic_4_echoPin = 29;
 const int ultrasonic_5_echoPin = 31;
 
-int echoPins = {ultrasonic_1_echoPin, ultrasonic_2_echoPin, ultrasonic_3_echoPin, ultrasonic_4_echoPin, ultrasonic_5_echoPin};
+int echoPins[] = {ultrasonic_1_echoPin, ultrasonic_2_echoPin, ultrasonic_3_echoPin, ultrasonic_4_echoPin, ultrasonic_5_echoPin};
 
 
 // defines duration variables
@@ -36,7 +38,7 @@ long duration4;
 long duration5;
 
 
-durations = {duration1, duration2, duration3, duration4, duration5};
+long durations[] = {duration1, duration2, duration3, duration4, duration5};
 
 // defines distance variables
 int distance1;
@@ -45,7 +47,7 @@ int distance3;
 int distance4;
 int distance5;
 
-distances = {distance1, distance2, distance3, distance4, distance5};
+int distances[] = {distance1, distance2, distance3, distance4, distance5};
 
 void setup() {
 
@@ -82,8 +84,11 @@ void fetch_ultrasonic_reading() {
         digitalWrite(triggerPins[i], LOW);
         duration = pulseIn(echoPins[i], HIGH);
         distance = duration*0.034/2;
-        Serial.print("Distance: ");
+        Serial.print("Distance for "+String(i)+" is: ");
         Serial.println(distance);
+        Serial.println("-------------------------------------------------------");
+        Serial.println("-------------------------------------------------------");
+        Serial.println("-------------------------------------------------------");
 
     }
 
