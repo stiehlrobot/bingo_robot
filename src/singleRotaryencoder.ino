@@ -30,13 +30,12 @@
  } 
 
  void loop() { 
-   readRightEncoder();
-   readLeftEncoder();
+   readEncoders();
  }
 
  void readRightEncoder() { 
 
- rightaState = digitalRead(outputRightA); // Reads the "current" state of the outputA
+ rightAState = digitalRead(outputRightA); // Reads the "current" state of the outputA
    // If the previous and the current state of the outputA are different, that means a Pulse has occured
    if (rightAState != rightALastState){     
      // If the outputB state is different to the outputA state, that means the encoder is rotating clockwise
@@ -68,4 +67,36 @@
    } 
    leftALastState = leftAState; // Updates the previous state of the outputA with the current state
 
+ }
+
+ 
+ void readEncoders() { 
+
+ rightAState = digitalRead(outputRightA); // Reads the "current" state of the outputA
+ leftAState = digitalRead(outputLeftA); // Reads the "current" state of the outputA
+   // If the previous and the current state of the outputA are different, that means a Pulse has occured
+   if (leftAState != leftALastState){     
+     // If the outputB state is different to the outputA state, that means the encoder is rotating clockwise
+     if (digitalRead(outputLeftB) != leftAState) { 
+       leftCounter ++;
+     } else {
+       leftCounter --;
+     }
+    else if(rightAState != rightALastState) {
+         if (digitalRead(outputRightB) != rightAState) { 
+       rightCounter ++;
+     } else {
+       rightCounter --;
+     }
+    }
+
+     Serial.print("Left Position: ");
+     Serial.println(leftCounter);
+
+    
+     Serial.print("Right Position: ");
+     Serial.println(rightCounter);
+   } 
+    leftALastState = leftAState; // Updates the previous state of the outputA with the current state
+    rightALastState = rightAState; // Updates the previous state of the outputA with the current state
  }
