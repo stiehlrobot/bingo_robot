@@ -6,8 +6,8 @@
  
  #define outputRightA 40
  #define outputRightB 41
- #define outputLeftA 40
- #define outputLeftB 40
+ #define outputLeftA 42
+ #define outputLeftB 43
 
 
  int leftCounter = 0;
