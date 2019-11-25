@@ -1,0 +1,15 @@
+# this is the general overview of the software architechture for bingo
+
+1. Arduino
+
+The arduino is running a rosserial node with functionality to process/control:
+3 ultrasonic sensors input data, 1 Ir sensor input data, 1 servo motor output, Input from 9 DoF IMU, 12V DC motor control, 
+reading motor encoder values and publishing on ros topic
+
+2. Raspi
+
+ROS Master node handling route planning, goal oriented behavior, SLAM, bheavior logic, audio, etc.
+
+
+
+

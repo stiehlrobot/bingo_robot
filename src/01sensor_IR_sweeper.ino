@@ -3,41 +3,57 @@
 
 
 
+/* based on Sweep
+ by BARRAGAN <http://barraganstudio.com>
+ This example code is in the public domain.
 
-void setup {
-    
-    sensor_height_from_ground = 15; //define sensor height from ground level in cm
-    hypotheneuse_width = 25; //define the hypothenuse distance in cm
+ modified 8 Nov 2013
+ by Scott Fitzgerald
+ http://www.arduino.cc/en/Tutorial/Sweep
+*/
 
-    posAmount = 20; //how many beams is the laser divided into 
-    chasm_position = Null;
+#include <Servo.h>
 
-    servoMaxRange = 90;
-    servoMinRange = 0;
-    posIncrement = servoMaxRange / (posAmount - 1);
-    delay_between_positions = 100; //delay between servo positions in milliseconds
+Servo myservo;  // create servo object to control a servo
+// twelve servo objects can be created on most boards
 
-    int pos = 0;
+int pos = 0;    // variable to store the servo position
 
+
+void setup() {
+  myservo.attach(34);  // attaches the servo on pin 9 to the servo object
+  pinMode(35,INPUT);
+  Serial.begin(9600);
 }
 
-void loop {
+void loop() {
 
-    //v1 loop test
-    for (pos; pos <= servoMaxRange; pos + posIncrement) {
-        if (digitalRead(IR_PIN) == LOW) {
+  for (pos = 0; pos <= 180; pos += 5) { // goes from 0 degrees to 180 degrees
+    // in steps of 1 degree
 
-            chasm_position = pos; 
-            //publish this chasm position via ros publisher
-
+    // ground is where it should be
+    if(digitalRead(6)==HIGH)  {
+            Serial.println("Somebody is here.");
         }
-
-    for (pos; pos ǵreatertan= servoMinRange; pos - posIncrement) {
-        if (digitalRead(IR_PIN) == LOW) {
-
-            chasm_position = pos; 
-            //publish this chasm position via ros publisher
-
+        //The ground is not where it should be
+        else  {
+            Serial.println("Nobody.");
         }
+    myservo.write(pos);              // tell servo to go to position in variable 'pos'
+    delay(10);                       // waits 15ms for the servo to reach the position
+  }
+  
+  //change direction of sweep
+  for (pos = 180; pos >= 0; pos -= 5) { // goes from 180 degrees to 0 degrees
 
+    if(digitalRead(6)==HIGH)  {
+            Serial.println("Somebody is here.");
+        }
+        //The ground is not where it should be
+        else  {
+            Serial.println("Nobody.");
+        }
+    myservo.write(pos);              // tell servo to go to position in variable 'pos'
+    delay(10);                       // waits 15ms for the servo to reach the position
+  }
 }

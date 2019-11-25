@@ -10,10 +10,10 @@
  */
 
 // pins for the encoder inputs
-#define RH_ENCODER_A 3 
-#define RH_ENCODER_B 5
-#define LH_ENCODER_A 2
-#define LH_ENCODER_B 4
+#define RH_ENCODER_A 40 
+#define RH_ENCODER_B 41
+#define LH_ENCODER_A 42
+#define LH_ENCODER_B 43
 
 // variables to store the number of encoder pulses
 // for each motor
