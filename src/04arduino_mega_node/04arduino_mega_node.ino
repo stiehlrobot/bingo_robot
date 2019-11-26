@@ -61,11 +61,11 @@ void handle_Twist(const geometry_msgs::Twist &msg);
 //msg type imports
 ros::NodeHandle nh;
 std_msgs::String str_msg;
-std_msgs::Int8 ticks_msg;
+std_msgs::Int32 ticks_msg;
 
 
 // pubs and subs
-//ros::Publisher leftEncoderTicks("/left_encoder_ticks", &ticks_msg);
+ros::Publisher leftEncoderTicks("/left_encoder_ticks", &ticks_msg);
 ros::Publisher rightEncoderTicks("/right_encoder_ticks", &ticks_msg);
 ros::Subscriber<geometry_msgs::Twist> sub("/turtle1/cmd_vel", &handle_Twist); // keyboard input subscriber
 
@@ -227,7 +227,6 @@ void readRightEncoder() {
 
      //publish the ticks via ROS
      ticks_msg.data = rightCounter;
-     ROS_INFO("%d", ticks_msg.data);
     rightEncoderTicks.publish(ticks_msg.data);
 
 
@@ -253,7 +252,6 @@ void readRightEncoder() {
 
      //publish the ticks via ROS
      ticks_msg.data = leftCounter;
-     ROS_INFO("%d", ticks_msg.data);
     leftEncoderTicks.publish(ticks_msg.data);
    } 
    leftALastState = leftAState; // Updates the previous state of the outputA with the current state
@@ -265,11 +263,11 @@ void handleChangeB() {
     if(readA != readB) {
         rightCount++;
         //publish the ticks via ROS
-        ticks_msg.data = rightCounter;
+        ticks_msg.data = rightCount;
         rightEncoderTicks.publish(&ticks_msg);
     } else {
         rightCount--;
-        ticks_msg.data = rightCounter;
+        ticks_msg.data = rightCount;
     rightEncoderTicks.publish(&ticks_msg);
     }
 }
@@ -277,11 +275,11 @@ void handleChangeB() {
 void handleChangeA() {
     if(readA == readB) {
         rightCount++;
-        ticks_msg.data = rightCounter;
+        ticks_msg.data = rightCount;
         rightEncoderTicks.publish(&ticks_msg);
     } else {
         rightCount--;
-        ticks_msg.data = rightCounter;
+        ticks_msg.data = rightCount;
         rightEncoderTicks.publish(&ticks_msg);
     }
 }
