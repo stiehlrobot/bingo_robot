@@ -13,6 +13,14 @@
 
 //define pins for encoder channel A and B inputs
 
+const byte rightMotorEncoderPinA = 21; // Arduino mega pin 20 for encoder output A
+const byte rightMotorEncoderPinB = 20; // Arduino mega pin 21 for encoder output B
+
+volatile long rightCount = 0; //arduino reference recommends using volatile type when working with counters for interrupts
+
+#define readA digitalRead(rightMotorEncoderPinA)
+#define readB digitalRead(rightMotorEncoderPinB)
+
  #define outputRightA 40
  #define outputRightB 41
  #define outputLeftA 42
@@ -46,20 +54,19 @@ int STBY = 6; //standby
 bool move_forward_left = true;
 bool move_forward_right = true;
 
+
 //functions definitions
 void handle_Twist(const geometry_msgs::Twist &msg);
 
 //msg type imports
 ros::NodeHandle nh;
 std_msgs::String str_msg;
-std_msgs::Int32 ticks_msg_left;
-std_msgs::Int32 ticks_msg_right;
-
+std_msgs::Int8 ticks_msg;
 
 
 // pubs and subs
-ros::Publisher leftEncoderTicks("/left_encoder_ticks", &ticks_msg_left);
-ros::Publisher rightEncoderTicks("/right_encoder_ticks", &ticks_msg_right);
+//ros::Publisher leftEncoderTicks("/left_encoder_ticks", &ticks_msg);
+ros::Publisher rightEncoderTicks("/right_encoder_ticks", &ticks_msg);
 ros::Subscriber<geometry_msgs::Twist> sub("/turtle1/cmd_vel", &handle_Twist); // keyboard input subscriber
 
 //ROS loop rate
@@ -70,8 +77,16 @@ void setup()
 {
     nh.initNode();
     nh.subscribe(sub);
-    nh.advertise(leftEncoderTicks);
+    //nh.advertise(leftEncoderTicks);
     nh.advertise(rightEncoderTicks);
+
+    //define encoder pins
+    pinMode(rightMotorEncoderPinA, INPUT_PULLUP); //must start with inputs Pulled up
+    pinMode(rightMotorEncoderPinB, INPUT_PULLUP); //must start with inputs Pulled up
+
+    //attach interrupts
+    attachInterrupt(digitalPinToInterrupt(rightMotorEncoderPinA), handleChangeA, CHANGE); //so without using digitalPinToInterrupt I assign the pin directly to 3 which is pin 20 on the arduino mega
+    attachInterrupt(digitalPinToInterrupt(rightMotorEncoderPinB), handleChangeB, CHANGE); //so without using digitalPinToInterrupt I assign the pin directly to 2 which is pin 21 on the arduino mega
 
     //define encoder pins as inputs
    pinMode (outputRightA,INPUT);
@@ -94,10 +109,10 @@ void setup()
 
 void loop()
 {
-    readRightEncoder();
-    readLeftEncoder();
+    //readRightEncoder();
+    //readLeftEncoder();
     nh.spinOnce();
-    delay(10);
+    //delay(10);
 }
 
 //functions to control state of standby pin on TB6612FNG, low sets standby mode on, high removes standby
@@ -211,8 +226,9 @@ void readRightEncoder() {
      Serial.println(rightCounter);
 
      //publish the ticks via ROS
-     ticks_msg_right.data = rightCounter;
-    rightEncoderTicks.publish(&ticks_msg_right);
+     ticks_msg.data = rightCounter;
+     ROS_INFO("%d", ticks_msg.data);
+    rightEncoderTicks.publish(ticks_msg.data);
 
 
    } 
@@ -236,9 +252,36 @@ void readRightEncoder() {
      Serial.println(leftCounter);
 
      //publish the ticks via ROS
-     ticks_msg_left.data = leftCounter;
-    leftEncoderTicks.publish(&ticks_msg_left);
+     ticks_msg.data = leftCounter;
+     ROS_INFO("%d", ticks_msg.data);
+    leftEncoderTicks.publish(ticks_msg.data);
    } 
    leftALastState = leftAState; // Updates the previous state of the outputA with the current state
 
  }
+
+
+void handleChangeB() {
+    if(readA != readB) {
+        rightCount++;
+        //publish the ticks via ROS
+        ticks_msg.data = rightCounter;
+        rightEncoderTicks.publish(&ticks_msg);
+    } else {
+        rightCount--;
+        ticks_msg.data = rightCounter;
+    rightEncoderTicks.publish(&ticks_msg);
+    }
+}
+
+void handleChangeA() {
+    if(readA == readB) {
+        rightCount++;
+        ticks_msg.data = rightCounter;
+        rightEncoderTicks.publish(&ticks_msg);
+    } else {
+        rightCount--;
+        ticks_msg.data = rightCounter;
+        rightEncoderTicks.publish(&ticks_msg);
+    }
+}
