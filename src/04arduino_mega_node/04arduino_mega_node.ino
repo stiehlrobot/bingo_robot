@@ -11,26 +11,39 @@
 #define PWMRANGE 255
 #define PWM_MIN 0
 
-//define pins for encoder channel A and B inputs
+//define pins for right encoder channel A and B inputs
 
 const byte rightMotorEncoderPinA = 21; // Arduino mega pin 20 for encoder output A
 const byte rightMotorEncoderPinB = 20; // Arduino mega pin 21 for encoder output B
 
+
+//define pins for left encoder channel A and B inputs
+
+const byte leftMotorEncoderPinA = 19; // Arduino mega pin 19 for encoder output A
+const byte leftMotorEncoderPinB = 18; // Arduino mega pin 18 for encoder output B
+
 volatile long rightCount = 0; //arduino reference recommends using volatile type when working with counters for interrupts
+volatile long leftCount = 0; //arduino reference recommends using volatile type when working with counters for interrupts
 
 #define readA digitalRead(rightMotorEncoderPinA)
 #define readB digitalRead(rightMotorEncoderPinB)
 
+#define readC digitalRead(leftMotorEncoderPinA)
+#define readD digitalRead(leftMotorEncoderPinB)
+
+//OLD
  #define outputRightA 40
  #define outputRightB 41
  #define outputLeftA 42
  #define outputLeftB 43
 
+//OLD
 //define counters for 
 
 int leftCounter = 0;
 int rightCounter = 0;
 
+//OLD
 //define variables for holding encoder states for left and right encoders
 
 int rightAState;
@@ -61,12 +74,12 @@ void handle_Twist(const geometry_msgs::Twist &msg);
 //msg type imports
 ros::NodeHandle nh;
 std_msgs::String str_msg;
-std_msgs::Int32 ticks_msg;
-
+std_msgs::Int32 left_ticks_msg;
+std_msgs::Int32 right_ticks_msg;
 
 // pubs and subs
-ros::Publisher leftEncoderTicks("/left_encoder_ticks", &ticks_msg);
-ros::Publisher rightEncoderTicks("/right_encoder_ticks", &ticks_msg);
+ros::Publisher leftEncoderTicks("/left_encoder_ticks", &left_ticks_msg);
+ros::Publisher rightEncoderTicks("/right_encoder_ticks", &right_ticks_msg);
 ros::Subscriber<geometry_msgs::Twist> sub("/turtle1/cmd_vel", &handle_Twist); // keyboard input subscriber
 
 //ROS loop rate
@@ -79,16 +92,25 @@ void setup()
     nh.subscribe(sub);
     //nh.advertise(leftEncoderTicks);
     nh.advertise(rightEncoderTicks);
+    nh.advertise(leftEncoderTicks);
 
     //define encoder pins
     pinMode(rightMotorEncoderPinA, INPUT_PULLUP); //must start with inputs Pulled up
     pinMode(rightMotorEncoderPinB, INPUT_PULLUP); //must start with inputs Pulled up
 
-    //attach interrupts
-    attachInterrupt(digitalPinToInterrupt(rightMotorEncoderPinA), handleChangeA, CHANGE); //so without using digitalPinToInterrupt I assign the pin directly to 3 which is pin 20 on the arduino mega
-    attachInterrupt(digitalPinToInterrupt(rightMotorEncoderPinB), handleChangeB, CHANGE); //so without using digitalPinToInterrupt I assign the pin directly to 2 which is pin 21 on the arduino mega
+     //define encoder pins
+    pinMode(leftMotorEncoderPinA, INPUT_PULLUP); //must start with inputs Pulled up
+    pinMode(leftMotorEncoderPinB, INPUT_PULLUP); //must start with inputs Pulled up
 
-    //define encoder pins as inputs
+    //attach interrupts
+    attachInterrupt(digitalPinToInterrupt(rightMotorEncoderPinA), handleChangeA, CHANGE); 
+    attachInterrupt(digitalPinToInterrupt(rightMotorEncoderPinB), handleChangeB, CHANGE); 
+
+    //attach interrupts
+    attachInterrupt(digitalPinToInterrupt(leftMotorEncoderPinA), handleChangeC, CHANGE); 
+    attachInterrupt(digitalPinToInterrupt(leftMotorEncoderPinB), handleChangeD, CHANGE); 
+
+    //OLD define encoder pins as inputs
    pinMode (outputRightA,INPUT);
    pinMode (outputRightB,INPUT);
    pinMode (outputLeftA,INPUT);
@@ -258,28 +280,55 @@ void readRightEncoder() {
 
  }
 
+void handleChangeA() {
+    if(readA == readB) {
+        rightCount++;
+        right_ticks_msg.data = rightCount;
+        rightEncoderTicks.publish(&right_ticks_msg);
+    } else {
+        rightCount--;
+        right_ticks_msg.data = rightCount;
+        rightEncoderTicks.publish(&right_ticks_msg);
+    }
+}
+
 
 void handleChangeB() {
     if(readA != readB) {
         rightCount++;
         //publish the ticks via ROS
-        ticks_msg.data = rightCount;
-        rightEncoderTicks.publish(&ticks_msg);
+        right_ticks_msg.data = rightCount;
+        rightEncoderTicks.publish(&right_ticks_msg);
     } else {
         rightCount--;
-        ticks_msg.data = rightCount;
-    rightEncoderTicks.publish(&ticks_msg);
+        right_ticks_msg.data = rightCount;
+        rightEncoderTicks.publish(&right_ticks_msg);
     }
 }
 
-void handleChangeA() {
-    if(readA == readB) {
-        rightCount++;
-        ticks_msg.data = rightCount;
-        rightEncoderTicks.publish(&ticks_msg);
+void handleChangeC() {
+    if(readC == readD) {
+        leftCount++;
+        //publish the ticks via ROS
+        left_ticks_msg.data = leftCount;
+        leftEncoderTicks.publish(&left_ticks_msg);
     } else {
-        rightCount--;
-        ticks_msg.data = rightCount;
-        rightEncoderTicks.publish(&ticks_msg);
+        leftCount--;
+        left_ticks_msg.data = leftCount;
+        leftEncoderTicks.publish(&left_ticks_msg);
     }
 }
+
+void handleChangeD() {
+    if(readC != readD) {
+        leftCount++;
+        //publish the ticks via ROS
+        left_ticks_msg.data = leftCount;
+        leftEncoderTicks.publish(&left_ticks_msg);
+    } else {
+        leftCount--;
+        left_ticks_msg.data = leftCount;
+        leftEncoderTicks.publish(&left_ticks_msg);
+    }
+}
+
