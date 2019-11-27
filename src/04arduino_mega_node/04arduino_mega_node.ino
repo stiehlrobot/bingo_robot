@@ -74,6 +74,8 @@ void handle_Twist(const geometry_msgs::Twist &msg);
 //msg type imports
 ros::NodeHandle nh;
 std_msgs::String str_msg;
+std_msgs::Int32 ticks_msg;
+
 std_msgs::Int32 left_ticks_msg;
 std_msgs::Int32 right_ticks_msg;
 
@@ -282,11 +284,11 @@ void readRightEncoder() {
 
 void handleChangeA() {
     if(readA == readB) {
-        rightCount++;
+        rightCount--;
         right_ticks_msg.data = rightCount;
         rightEncoderTicks.publish(&right_ticks_msg);
     } else {
-        rightCount--;
+        rightCount++;
         right_ticks_msg.data = rightCount;
         rightEncoderTicks.publish(&right_ticks_msg);
     }
@@ -295,12 +297,12 @@ void handleChangeA() {
 
 void handleChangeB() {
     if(readA != readB) {
-        rightCount++;
+        rightCount--;
         //publish the ticks via ROS
         right_ticks_msg.data = rightCount;
         rightEncoderTicks.publish(&right_ticks_msg);
     } else {
-        rightCount--;
+        rightCount++;
         right_ticks_msg.data = rightCount;
         rightEncoderTicks.publish(&right_ticks_msg);
     }
@@ -331,4 +333,3 @@ void handleChangeD() {
         leftEncoderTicks.publish(&left_ticks_msg);
     }
 }
-
