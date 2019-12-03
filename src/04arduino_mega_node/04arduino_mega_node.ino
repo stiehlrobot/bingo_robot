@@ -53,17 +53,20 @@ int leftALastState;
 
 //define motor PINS used by Elecrow 2-Channel H-bridge Arduino Shield 
 
+// Motor_1 control pin initiate;
 const byte IN1_RIGHT = 4;
 const byte IN2_RIGHT = 5;
 const byte PWM_RIGHT = 9;
 
+// Motor_2 control pin initiate;
 const byte IN1_LEFT = 7;
 const byte IN2_LEFT = 8;
 const byte PWM_LEFT = 10;
 
-//
-
+//Standby Pin
 int STBY = 6; //standby
+
+
 bool move_forward_left = true;
 bool move_forward_right = true;
 
@@ -139,18 +142,6 @@ void loop()
     //delay(10);
 }
 
-//functions to control state of standby pin on TB6612FNG, low sets standby mode on, high removes standby
-void set_standby(bool is_on)
-{
-    if (is_on)
-    {
-        digitalWrite(STBY, LOW);
-    }
-    else
-    {
-        digitalWrite(STBY, HIGH);
-    }
-}
 
 //callback function to handle published messages on /cmd_vel topic
 void handle_Twist(const geometry_msgs::Twist &msg)
@@ -195,43 +186,37 @@ float cmdvel_to_Pwm(float x, float out_min, float out_max)
 
 void setMotorRight(int motorSpeed, bool is_forward)
 {
-    set_standby(false);
+    
     if (is_forward)
-    {
-        digitalWrite(IN1_RIGHT, HIGH);
-        digitalWrite(IN2_RIGHT, LOW);
-    }
-    else if (!is_forward)
-    {
+    {   
+        //rotates clockwise
         digitalWrite(IN1_RIGHT, LOW);
         digitalWrite(IN2_RIGHT, HIGH);
+       
     }
-    else
-    {
+    else {   
+         //rotates counter-clockwise
         digitalWrite(IN1_RIGHT, HIGH);
-        digitalWrite(IN2_RIGHT, HIGH);
-    }
+        digitalWrite(IN2_RIGHT, LOW);
+        
+    }    
     analogWrite(PWM_RIGHT, abs(motorSpeed));
 }
 
 void setMotorLeft(int motorSpeed, bool is_forward)
 {   
-    set_standby(false);
+    
     if (is_forward)
-    {
+    {   
+        //rotates counter-clockwise
         digitalWrite(IN1_LEFT, HIGH);
         digitalWrite(IN2_LEFT, LOW);
     }
-    else if (!is_forward)
-    {
+    else {   
+        //rotates clockwise
         digitalWrite(IN1_LEFT, LOW);
         digitalWrite(IN2_LEFT, HIGH);
-    }
-    else
-    {
-        digitalWrite(IN1_LEFT, LOW);
-        digitalWrite(IN2_LEFT, LOW);
-    }
+    }   
     analogWrite(PWM_LEFT, abs(motorSpeed));
 }
 
