@@ -1,8 +1,10 @@
 #include <ros.h>
+#include <ros/time.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Float32.h>
 #include <std_msgs/Int32.h>
 #include <geometry_msgs/Twist.h>
+#include <sensor_msgs/Range.h>
 
 #include <Arduino.h>
 
@@ -51,6 +53,28 @@ int leftAState;
 int rightALastState;  
 int leftALastState;
 
+
+//LED ARRAY DEFINITIONS
+
+//define left led array ledpins
+int left_ledPins[] = {
+  11, 12, 10, 9, 8, 7
+};
+
+//define items in left led array
+int pinCount = 6;
+
+//define left ledArray ledpins
+int right_ledPins[] = {
+  11, 12, 10, 9, 8, 7
+};
+
+//ULTRASONIC ARRAY DEFINITIONS
+const int ultrasonic_trigPins[] = {22, 24, 26, 28, 30};
+const int ultrasonic_echoPins[] = {23, 25, 27, 29, 31};
+
+//MOTOR SHIELD DEFINITIONS
+
 //define motor PINS used by Elecrow 2-Channel H-bridge Arduino Shield 
 
 // Motor_1 control pin initiate;
@@ -76,15 +100,34 @@ void handle_Twist(const geometry_msgs::Twist &msg);
 
 //msg type imports
 ros::NodeHandle nh;
+
 std_msgs::String str_msg;
 std_msgs::Int32 ticks_msg;
 
 std_msgs::Int32 left_ticks_msg;
 std_msgs::Int32 right_ticks_msg;
 
-// pubs and subs
+sensor_msgs::Range range_msg;
+
+
+
+// ROS PUBLISHERS AND SUBSCRIBERS
+//left and right encoder publishers
 ros::Publisher leftEncoderTicks("/left_encoder_ticks", &left_ticks_msg);
 ros::Publisher rightEncoderTicks("/right_encoder_ticks", &right_ticks_msg);
+
+//Ultrasonic Sensor publishers
+ros::Publisher pub_range1("/ultrasonic1_range", &range_msg);
+ros::Publisher pub_range2("/ultrasonic2_range", &range_msg);
+ros::Publisher pub_range3("/ultrasonic3_range", &range_msg);
+ros::Publisher pub_range4("/ultrasonic4_range", &range_msg);
+ros::Publisher pub_range5("/ultrasonic5_range", &range_msg);
+ros::Publisher pubranges[] = {pub_range1, pub_range2, pub_range3, pub_range4, pub_range5};
+
+char frameid[] = "/ultrasound";
+
+
+
 ros::Subscriber<geometry_msgs::Twist> sub("/turtle1/cmd_vel", &handle_Twist); // keyboard input subscriber
 
 //ROS loop rate
@@ -95,9 +138,25 @@ void setup()
 {
     nh.initNode();
     nh.subscribe(sub);
-    //nh.advertise(leftEncoderTicks);
+
+    //ADVERTISE ROS PUBLISHERS TO MASTER
+    
     nh.advertise(rightEncoderTicks);
     nh.advertise(leftEncoderTicks);
+
+    nh.advertise(pub_range1);
+    nh.advertise(pub_range2);
+    nh.advertise(pub_range3);
+    nh.advertise(pub_range4);
+    nh.advertise(pub_range5);
+
+    //Define the specifcations for the ultrasonic range msg: frame id, field of view, min and max ranges in metres
+    range_msg.radiation_type = sensor_msgs::Range::ULTRASOUND;
+    range_msg.header.frame_id = frameid;
+    range_msg.field_of_view = 0.1;
+    range_msg.min_range = 0.002; // 2 cm
+    range_msg.max_range = 0.450; // 450 cm
+
 
     //define encoder pins
     pinMode(rightMotorEncoderPinA, INPUT_PULLUP); //must start with inputs Pulled up
@@ -117,9 +176,20 @@ void setup()
 
     //OLD define encoder pins as inputs
    pinMode (outputRightA,INPUT);
-   pinMode (outputRightB,INPUT);
+   pinMode (outputRightB,INPUTrange_msg.radiation_type = sensor_msgs::Range::ULTRASOUND;
+    range_msg.header.frame_id = frameid;
+    range_msg.field_of_view = 0.1;
+    range_msg.min_range = 0.002; // 2 cm
+    range_msg.max_range = 0.450; // 450 cm);
    pinMode (outputLeftA,INPUT);
    pinMode (outputLeftB,INPUT);
+
+
+    // initialize the led pins in the ledpins array as outputs
+
+    for (int currentPin = 0; currentPin < pinCount; currentPin++) {
+        pinMode(left_ledPins[currentPin], OUTPUT);
+    }
 
     //initialize motor shield pins as output pins
     pinMode(IN1_RIGHT, OUTPUT);
@@ -132,6 +202,32 @@ void setup()
 
     //Enable the Motor Shield output;  
     digitalWrite(6, HIGH);  
+void fetch_ultrasonic_reading() {
+
+    long duration;
+    int distance;
+
+    //simplified approach with arrays
+    for (int i=0; i<5; i++) {
+        
+        pinMode(ultrasonic_trigPins[i], OUTPUT); // Sets the trigPin as an Output
+        pinMode(ultrasonic_echoPins[i], INPUT); // Sets the echoPin as an Input //
+        digitalWrite(ultrasonic_trigPins[i], LOW);
+        delayMicroseconds(2);
+        digitalWrite(ultrasonic_trigPins[i], HIGH);
+        delayMicroseconds(10);
+        digitalWrite(ultrasonic_trigPins[i], LOW);
+        duration = pulseIn(ultrasonic_echoPins[i], HIGH);
+        distance = duration*0.034/2;
+        range_msg.range = distance;
+        range_msg.header.stamp = nh.now();
+        pubranges[i].publish(&range_msg);
+        
+
+    }
+
+
+}
 }
 
 void loop()
@@ -153,6 +249,7 @@ void handle_Twist(const geometry_msgs::Twist &msg)
     // Transforming linear and angular velocities to speed for the LEFT RIGHT MOTORS
     float l = (msg.linear.x - msg.angular.z) / 2;
     if (l > 0.0)
+
     {
         move_forward_left = true;
     }
@@ -267,6 +364,8 @@ void readRightEncoder() {
 
  }
 
+//MOTOR ENCODER INTERRUPT HANDLERS BELOW
+
 void handleChangeA() {
     if(readA == readB) {
         rightCount--;
@@ -317,4 +416,86 @@ void handleChangeD() {
         left_ticks_msg.data = leftCount;
         leftEncoderTicks.publish(&left_ticks_msg);
     }
+}
+
+//LED ARRAY FUNCTIONS BELOW
+
+void circulate_blink(int lightArray[], int intervalMillis) {
+
+    for (int currentPin = 0; currentPin < pinCount; currentPin++) {
+        digitalWrite(lightArray[currentPin], HIGH);   // turn the LED on (HIGH is the voltage level)
+        delay(intervalMillis);
+    }
+
+    for (int currentPin = 0; currentPin < pinCount; currentPin++) {
+        digitalWrite(lightArray[currentPin], LOW);   // turn the LED on (HIGH is the voltage level)
+        delay(intervalMillis);
+    }
+  
+
+}
+
+
+
+void warningn_blink(int ledLightArray[], int blinkIntervalMillis) {
+
+     for (int currentPin = 0; currentPin < pinCount; currentPin++) {
+        digitalWrite(ledLightArray[currentPin], HIGH);   // turn the LED on (HIGH is the voltage level)
+        
+    }
+
+    delay(blinkIntervalMillis);
+
+    for (int currentPin = 0; currentPin < pinCount; currentPin++) {
+        digitalWrite(ledLightArray[currentPin], LOW);   // turn the LED on (HIGH is the voltage level)
+        
+    }
+
+    delay(blinkIntervalMillis);
+
+}
+
+void movement_blink(int ledArray[], int stepIntervalMillis) {
+     for (int currentPin = 0; currentPin < pinCount; currentPin++) {
+        digitalWrite(ledArray[currentPin], HIGH);   // turn the LED on (HIGH is the voltage level)
+        if(currentPin == 0) {
+            digitalWrite(ledArray[pinCount-1], LOW);
+        }
+        else {
+            digitalWrite(ledArray[currentPin-1], LOW);
+        }
+        delay(stepIntervalMillis);
+    }
+
+}
+
+
+//ULTRASONIC ARRAY FUNCTIONS
+
+
+void fetch_ultrasonic_reading() {
+
+    long duration;
+    int distance;
+
+    //simplified approach with arrays
+    for (int i=0; i<5; i++) {
+        
+        pinMode(ultrasonic_trigPins[i], OUTPUT); // Sets the trigPin as an Output
+        pinMode(ultrasonic_echoPins[i], INPUT); // Sets the echoPin as an Input //
+        digitalWrite(ultrasonic_trigPins[i], LOW);
+        delayMicroseconds(2);
+        digitalWrite(ultrasonic_trigPins[i], HIGH);
+        delayMicroseconds(10);
+        digitalWrite(ultrasonic_trigPins[i], LOW);
+        duration = pulseIn(ultrasonic_echoPins[i], HIGH);
+        distance = duration*0.034/2;
+        range_msg.range = distance;
+        range_msg.header.stamp = nh.now();
+        pubranges[i].publish(&range_msg);
+        
+
+    }
+
+
 }
