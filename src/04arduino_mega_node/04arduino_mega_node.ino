@@ -90,6 +90,7 @@ const byte PWM_LEFT = 10;
 //Standby Pin
 int STBY = 6; //standby
 
+bool motor_state = false;
 
 bool move_forward_left = true;
 bool move_forward_right = true;
@@ -103,9 +104,12 @@ ros::NodeHandle nh;
 
 std_msgs::String str_msg;
 std_msgs::Int32 ticks_msg;
+std_srvs::Empty;
 
 std_msgs::Int32 left_ticks_msg;
 std_msgs::Int32 right_ticks_msg;
+
+std_msgs::Bool motor_state_msg;
 
 sensor_msgs::Range range_msg;
 
@@ -115,6 +119,11 @@ sensor_msgs::Range range_msg;
 //left and right encoder publishers
 ros::Publisher leftEncoderTicks("/left_encoder_ticks", &left_ticks_msg);
 ros::Publisher rightEncoderTicks("/right_encoder_ticks", &right_ticks_msg);
+
+ros::ServiceServer<Bool::Request, Empty::Response> enable_motor_server("/enable_motors",&enable_motor_callback);
+
+//INCOMPLETE
+ros::Publisher motorState("/motor_state", &motor_state_msg);
 
 //Ultrasonic Sensor publishers
 ros::Publisher pub_range1("/ultrasonic1_range", &range_msg);
@@ -143,6 +152,7 @@ void setup()
     
     nh.advertise(rightEncoderTicks);
     nh.advertise(leftEncoderTicks);
+    nh.advertise(motorState);
 
     nh.advertise(pub_range1);
     nh.advertise(pub_range2);
@@ -150,12 +160,17 @@ void setup()
     nh.advertise(pub_range4);
     nh.advertise(pub_range5);
 
+    //ADVERTISE ROS SERVICES
+
+    nh.advertiseService(enable_motor_server);
+
     //Define the specifcations for the ultrasonic range msg: frame id, field of view, min and max ranges in metres
     range_msg.radiation_type = sensor_msgs::Range::ULTRASOUND;
     range_msg.header.frame_id = frameid;
     range_msg.field_of_view = 0.1;
     range_msg.min_range = 0.002; // 2 cm
     range_msg.max_range = 0.450; // 450 cm
+
 
 
     //define encoder pins
@@ -176,11 +191,8 @@ void setup()
 
     //OLD define encoder pins as inputs
    pinMode (outputRightA,INPUT);
-   pinMode (outputRightB,INPUTrange_msg.radiation_type = sensor_msgs::Range::ULTRASOUND;
-    range_msg.header.frame_id = frameid;
-    range_msg.field_of_view = 0.1;
-    range_msg.min_range = 0.002; // 2 cm
-    range_msg.max_range = 0.450; // 450 cm);
+   pinMode (outputRightB,INPUT);
+   
    pinMode (outputLeftA,INPUT);
    pinMode (outputLeftB,INPUT);
 
@@ -202,32 +214,7 @@ void setup()
 
     //Enable the Motor Shield output;  
     digitalWrite(6, HIGH);  
-void fetch_ultrasonic_reading() {
 
-    long duration;
-    int distance;
-
-    //simplified approach with arrays
-    for (int i=0; i<5; i++) {
-        
-        pinMode(ultrasonic_trigPins[i], OUTPUT); // Sets the trigPin as an Output
-        pinMode(ultrasonic_echoPins[i], INPUT); // Sets the echoPin as an Input //
-        digitalWrite(ultrasonic_trigPins[i], LOW);
-        delayMicroseconds(2);
-        digitalWrite(ultrasonic_trigPins[i], HIGH);
-        delayMicroseconds(10);
-        digitalWrite(ultrasonic_trigPins[i], LOW);
-        duration = pulseIn(ultrasonic_echoPins[i], HIGH);
-        distance = duration*0.034/2;
-        range_msg.range = distance;
-        range_msg.header.stamp = nh.now();
-        pubranges[i].publish(&range_msg);
-        
-
-    }
-
-
-}
 }
 
 void loop()
@@ -235,7 +222,7 @@ void loop()
     //readRightEncoder();
     //readLeftEncoder();
     nh.spinOnce();
-    //delay(10);
+    delay(10);
 }
 
 
@@ -279,6 +266,16 @@ void handle_Twist(const geometry_msgs::Twist &msg)
 float cmdvel_to_Pwm(float x, float out_min, float out_max)
 {
     return x * (out_max - out_min) + out_min;
+}
+
+//handle enable motors service request
+
+void enable_motor_callback(const Bool::Request & req, Empty::Response & res) {
+    request = req.data;
+    motor_state = request;
+    //handle enable motors service
+
+
 }
 
 void setMotorRight(int motorSpeed, bool is_forward)
@@ -437,7 +434,7 @@ void circulate_blink(int lightArray[], int intervalMillis) {
 
 
 
-void warningn_blink(int ledLightArray[], int blinkIntervalMillis) {
+void warning_blink(int ledLightArray[], int blinkIntervalMillis) {
 
      for (int currentPin = 0; currentPin < pinCount; currentPin++) {
         digitalWrite(ledLightArray[currentPin], HIGH);   // turn the LED on (HIGH is the voltage level)
@@ -481,6 +478,7 @@ void fetch_ultrasonic_reading() {
     //simplified approach with arrays
     for (int i=0; i<5; i++) {
         
+       
         pinMode(ultrasonic_trigPins[i], OUTPUT); // Sets the trigPin as an Output
         pinMode(ultrasonic_echoPins[i], INPUT); // Sets the echoPin as an Input //
         digitalWrite(ultrasonic_trigPins[i], LOW);
@@ -499,3 +497,13 @@ void fetch_ultrasonic_reading() {
 
 
 }
+
+void publishMotorState() {
+
+        motor_state_msg.data = motor_state;
+        motorState.publish(&motor_state_msg);
+
+
+}
+
+
