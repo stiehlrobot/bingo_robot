@@ -33,26 +33,6 @@ volatile long leftCount = 0; //arduino reference recommends using volatile type 
 #define readC digitalRead(leftMotorEncoderPinA)
 #define readD digitalRead(leftMotorEncoderPinB)
 
-//OLD
- #define outputRightA 40
- #define outputRightB 41
- #define outputLeftA 42
- #define outputLeftB 43
-
-//OLD
-//define counters for 
-
-int leftCounter = 0;
-int rightCounter = 0;
-
-//OLD
-//define variables for holding encoder states for left and right encoders
-
-int rightAState;
-int leftAState;
-int rightALastState;  
-int leftALastState;
-
 
 //LED ARRAY DEFINITIONS
 
@@ -189,14 +169,7 @@ void setup()
     attachInterrupt(digitalPinToInterrupt(leftMotorEncoderPinA), handleChangeC, CHANGE); 
     attachInterrupt(digitalPinToInterrupt(leftMotorEncoderPinB), handleChangeD, CHANGE); 
 
-    //OLD define encoder pins as inputs
-   pinMode (outputRightA,INPUT);
-   pinMode (outputRightB,INPUT);
-   
-   pinMode (outputLeftA,INPUT);
-   pinMode (outputLeftB,INPUT);
-
-
+    
     // initialize the led pins in the ledpins array as outputs
 
     for (int currentPin = 0; currentPin < pinCount; currentPin++) {
@@ -278,6 +251,9 @@ float cmdvel_to_Pwm(float x, float out_min, float out_max)
 
 //}
 
+//FUNCTIONS TO CONTROL MOTORS 
+//giving speed as pwm and boolean for forward or reverse
+
 void setMotorRight(int motorSpeed, bool is_forward)
 {
     
@@ -314,52 +290,7 @@ void setMotorLeft(int motorSpeed, bool is_forward)
     analogWrite(PWM_LEFT, abs(motorSpeed));
 }
 
-void readRightEncoder() { 
 
- rightAState = digitalRead(outputRightA); // Reads the "current" state of the outputA
-   // If the previous and the current state of the outputA are different, that means a Pulse has occured
-   if (rightAState != rightALastState){     
-     // If the outputB state is different to the outputA state, that means the encoder is rotating clockwise
-     if (digitalRead(outputRightB) != rightAState) { 
-       rightCounter ++;
-     } else {
-       rightCounter --;
-     }
-     Serial.print("Position: ");
-     Serial.println(rightCounter);
-
-     //publish the ticks via ROS
-     ticks_msg.data = rightCounter;
-    rightEncoderTicks.publish(ticks_msg.data);
-
-
-   } 
-   rightALastState = rightAState; // Updates the previous state of the outputA with the current state
-
- }
-
-
- void readLeftEncoder() { 
-
- leftAState = digitalRead(outputLeftA); // Reads the "current" state of the outputA
-   // If the previous and the current state of the outputA are different, that means a Pulse has occured
-   if (leftAState != leftALastState){     
-     // If the outputB state is different to the outputA state, that means the encoder is rotating clockwise
-     if (digitalRead(outputLeftB) != leftAState) { 
-       leftCounter ++;
-     } else {
-       leftCounter --;
-     }
-     Serial.print("Position: ");
-     Serial.println(leftCounter);
-
-     //publish the ticks via ROS
-     ticks_msg.data = leftCounter;
-    leftEncoderTicks.publish(ticks_msg.data);
-   } 
-   leftALastState = leftAState; // Updates the previous state of the outputA with the current state
-
- }
 
 //MOTOR ENCODER INTERRUPT HANDLERS BELOW
 
@@ -478,6 +409,53 @@ void movement_blink(int ledArray[], int stepIntervalMillis) {
     }
 
 }
+
+//WIP ON HOW TO IMPLEMENT THE CIRCULATIO OF LED ARRAY LEDS IN SYNC WITH THE ENCODER TICKS. WHAT TAKES LESS RESOURCES:
+//1) CURRENT METHOD 
+//2) HAVING IF CONDITION IN THE MAIN LOOP TO CHECK WHEN ENCODER TICKS ARE DIVISIBLE BY CERTAIN VALUE, EG. 300 AND THEN CALLING CHANGE LED ARRAY ACTIVE LED FUNCTION
+//3) HANDLING ALL LOGIC in RASPI ROS side and simply calling a service to change the LED with one byte of the led which to power... pROBABLY THIS IS BEST ??
+// MY HUNCH IS THAT THE IF STATEMENT WORKS BETTER THAN THIS CURRENT METHOD 
+
+
+void left_movement_blink(int ledArray[], int stepIntervalEncoderTicks) {
+     
+     for (int currentPin = 0; currentPin < pinCount; currentPin++) {
+        
+        digitalWrite(ledArray[currentPin], HIGH);   // turn the LED on (HIGH is the voltage level)
+        if(currentPin == 0) {
+            digitalWrite(ledArray[pinCount-1], LOW);
+        }
+        else {
+            digitalWrite(ledArray[currentPin-1], LOW);
+        }
+        while(leftCount % stepIntervalEncoderTicks != 0){
+            delay(2);
+
+        }
+    }
+
+}
+
+void right_movement_blink(int ledArray[], int stepIntervalEncoderTicks) {
+     
+     for (int currentPin = 0; currentPin < pinCount; currentPin++) {
+        
+        digitalWrite(ledArray[currentPin], HIGH);   // turn the LED on (HIGH is the voltage level)
+        if(currentPin == 0) {
+            digitalWrite(ledArray[pinCount-1], LOW);
+        }
+        else {
+            digitalWrite(ledArray[currentPin-1], LOW);
+        }
+        while(rightCount % stepIntervalEncoderTicks != 0){
+            delay(2);
+
+        }
+    }
+
+}
+
+
 
 
 //ULTRASONIC ARRAY FUNCTIONS
