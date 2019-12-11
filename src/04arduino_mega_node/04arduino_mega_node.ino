@@ -104,12 +104,12 @@ ros::NodeHandle nh;
 
 std_msgs::String str_msg;
 std_msgs::Int32 ticks_msg;
-std_srvs::Empty;
+//std_srvs::Empty;
 
 std_msgs::Int32 left_ticks_msg;
 std_msgs::Int32 right_ticks_msg;
 
-std_msgs::Bool motor_state_msg;
+//std_msgs::Bool motor_state_msg;
 
 sensor_msgs::Range range_msg;
 
@@ -120,10 +120,10 @@ sensor_msgs::Range range_msg;
 ros::Publisher leftEncoderTicks("/left_encoder_ticks", &left_ticks_msg);
 ros::Publisher rightEncoderTicks("/right_encoder_ticks", &right_ticks_msg);
 
-ros::ServiceServer<Bool::Request, Empty::Response> enable_motor_server("/enable_motors",&enable_motor_callback);
+//ros::ServiceServer<Bool::Request, Empty::Response> enable_motor_server("/enable_motors",&enable_motor_callback);
 
 //INCOMPLETE
-ros::Publisher motorState("/motor_state", &motor_state_msg);
+//ros::Publisher motorState("/motor_state", &motor_state_msg);
 
 //Ultrasonic Sensor publishers
 ros::Publisher pub_range1("/ultrasonic1_range", &range_msg);
@@ -152,7 +152,7 @@ void setup()
     
     nh.advertise(rightEncoderTicks);
     nh.advertise(leftEncoderTicks);
-    nh.advertise(motorState);
+    //nh.advertise(motorState);
 
     nh.advertise(pub_range1);
     nh.advertise(pub_range2);
@@ -162,7 +162,7 @@ void setup()
 
     //ADVERTISE ROS SERVICES
 
-    nh.advertiseService(enable_motor_server);
+   // nh.advertiseService(enable_motor_server);
 
     //Define the specifcations for the ultrasonic range msg: frame id, field of view, min and max ranges in metres
     range_msg.radiation_type = sensor_msgs::Range::ULTRASOUND;
@@ -219,8 +219,8 @@ void setup()
 
 void loop()
 {
-    //readRightEncoder();
-    //readLeftEncoder();
+    publishRightEncoderTicks();
+    publishLeftEncoderTicks();
     nh.spinOnce();
     delay(10);
 }
@@ -246,7 +246,7 @@ void handle_Twist(const geometry_msgs::Twist &msg)
     }
 
     float r = (msg.linear.x + msg.angular.z) / 2;
-    if (l > 0.0)
+    if (r > 0.0)
     {
         move_forward_right = true;
     }
@@ -255,8 +255,8 @@ void handle_Twist(const geometry_msgs::Twist &msg)
         move_forward_right = false;
     }
 
-    uint16_t lPwm = cmdvel_to_Pwm(fabs(l), PWM_MIN, PWMRANGE);
-    uint16_t rPwm = cmdvel_to_Pwm(fabs(r), PWM_MIN, PWMRANGE);
+    uint16_t lPwm = cmdvel_to_Pwm(fabs(l), PWM_MIN, (PWMRANGE/4));
+    uint16_t rPwm = cmdvel_to_Pwm(fabs(r), PWM_MIN, (PWMRANGE/4));
 
     setMotorLeft(lPwm, move_forward_left);
     setMotorRight(rPwm, move_forward_right);
@@ -270,13 +270,13 @@ float cmdvel_to_Pwm(float x, float out_min, float out_max)
 
 //handle enable motors service request
 
-void enable_motor_callback(const Bool::Request & req, Empty::Response & res) {
-    request = req.data;
-    motor_state = request;
+//void enable_motor_callback(const Bool::Request & req, Empty::Response & res) {
+  //  request = req.data;
+    //motor_state = request;
     //handle enable motors service
 
 
-}
+//}
 
 void setMotorRight(int motorSpeed, bool is_forward)
 {
@@ -366,12 +366,12 @@ void readRightEncoder() {
 void handleChangeA() {
     if(readA == readB) {
         rightCount--;
-        right_ticks_msg.data = rightCount;
-        rightEncoderTicks.publish(&right_ticks_msg);
+        //right_ticks_msg.data = rightCount;
+        //rightEncoderTicks.publish(&right_ticks_msg);
     } else {
         rightCount++;
-        right_ticks_msg.data = rightCount;
-        rightEncoderTicks.publish(&right_ticks_msg);
+        //right_ticks_msg.data = rightCount;
+        //rightEncoderTicks.publish(&right_ticks_msg);
     }
 }
 
@@ -380,12 +380,12 @@ void handleChangeB() {
     if(readA != readB) {
         rightCount--;
         //publish the ticks via ROS
-        right_ticks_msg.data = rightCount;
-        rightEncoderTicks.publish(&right_ticks_msg);
+        //right_ticks_msg.data = rightCount;
+        //rightEncoderTicks.publish(&right_ticks_msg);
     } else {
         rightCount++;
-        right_ticks_msg.data = rightCount;
-        rightEncoderTicks.publish(&right_ticks_msg);
+        //right_ticks_msg.data = rightCount;
+        //rightEncoderTicks.publish(&right_ticks_msg);
     }
 }
 
@@ -393,12 +393,12 @@ void handleChangeC() {
     if(readC == readD) {
         leftCount++;
         //publish the ticks via ROS
-        left_ticks_msg.data = leftCount;
-        leftEncoderTicks.publish(&left_ticks_msg);
+        //left_ticks_msg.data = leftCount;
+        //leftEncoderTicks.publish(&left_ticks_msg);
     } else {
         leftCount--;
-        left_ticks_msg.data = leftCount;
-        leftEncoderTicks.publish(&left_ticks_msg);
+        //left_ticks_msg.data = leftCount;
+        //leftEncoderTicks.publish(&left_ticks_msg);
     }
 }
 
@@ -406,13 +406,26 @@ void handleChangeD() {
     if(readC != readD) {
         leftCount++;
         //publish the ticks via ROS
-        left_ticks_msg.data = leftCount;
-        leftEncoderTicks.publish(&left_ticks_msg);
+        //left_ticks_msg.data = leftCount;
+        //leftEncoderTicks.publish(&left_ticks_msg);
     } else {
         leftCount--;
-        left_ticks_msg.data = leftCount;
-        leftEncoderTicks.publish(&left_ticks_msg);
+        //left_ticks_msg.data = leftCount;
+        //leftEncoderTicks.publish(&left_ticks_msg);
     }
+}
+
+void publishLeftEncoderTicks() {
+
+    left_ticks_msg.data = -(leftCount);
+    leftEncoderTicks.publish(&left_ticks_msg);
+}
+
+void publishRightEncoderTicks() {
+
+    right_ticks_msg.data = -(rightCount);
+    rightEncoderTicks.publish(&right_ticks_msg);
+
 }
 
 //LED ARRAY FUNCTIONS BELOW
@@ -500,8 +513,8 @@ void fetch_ultrasonic_reading() {
 
 void publishMotorState() {
 
-        motor_state_msg.data = motor_state;
-        motorState.publish(&motor_state_msg);
+//        motor_state_msg.data = motor_state;
+  //      motorState.publish(&motor_state_msg);
 
 
 }
