@@ -36,18 +36,25 @@ volatile long leftCount = 0; //arduino reference recommends using volatile type 
 
 //LED ARRAY DEFINITIONS
 
-//define left led array ledpins
-int left_ledPins[] = {
-  11, 12, 10, 9, 8, 7
-};
-
-//define items in left led array
+//define items in led arrays
 int pinCount = 6;
 
-//define left ledArray ledpins
-int right_ledPins[] = {
-  11, 12, 10, 9, 8, 7
+//define left led array ledpins for arduino mega
+int left_ledPins[] = {
+  34, 35, 36, 37, 38, 39
 };
+
+int leftCurrentLed = 0;
+
+//define items in led arrays
+int pinCount = 6;
+
+//define left ledArray ledpins for arduino mega
+int right_ledPins[] = {
+  40, 41, 42, 43, 48, 49
+};
+
+int rightCurrentLed = 0;
 
 //ULTRASONIC ARRAY DEFINITIONS
 const int ultrasonic_trigPins[] = {22, 24, 26, 28, 30};
@@ -176,6 +183,10 @@ void setup()
         pinMode(left_ledPins[currentPin], OUTPUT);
     }
 
+    for (int currentPin = 0; currentPin < pinCount; currentPin++) {
+        pinMode(right_ledPins[currentPin], OUTPUT);
+    }
+
     //initialize motor shield pins as output pins
     pinMode(IN1_RIGHT, OUTPUT);
     pinMode(IN2_RIGHT, OUTPUT);
@@ -194,6 +205,19 @@ void loop()
 {
     publishRightEncoderTicks();
     publishLeftEncoderTicks();
+
+
+    //here you could have a conditional before to check that motor shield output is HIGH meaning 
+    //the motors are actually capable of doing something thus changing encoder value
+    
+    if(leftCount != 0 && leftCount % 300 == 0){
+        leftLedNext();
+    }
+
+    if(rightCount != 0 && rightCount % 300 == 0){
+        rightLedNext();
+    }
+
     nh.spinOnce();
     delay(10);
 }
@@ -410,7 +434,7 @@ void movement_blink(int ledArray[], int stepIntervalMillis) {
 
 }
 
-//WIP ON HOW TO IMPLEMENT THE CIRCULATIO OF LED ARRAY LEDS IN SYNC WITH THE ENCODER TICKS. WHAT TAKES LESS RESOURCES:
+//WIP ON HOW TO IMPLEMENT THE CIRCULATION OF LED ARRAY LEDS IN SYNC WITH THE ENCODER TICKS. WHAT TAKES LESS RESOURCES:
 //1) CURRENT METHOD 
 //2) HAVING IF CONDITION IN THE MAIN LOOP TO CHECK WHEN ENCODER TICKS ARE DIVISIBLE BY CERTAIN VALUE, EG. 300 AND THEN CALLING CHANGE LED ARRAY ACTIVE LED FUNCTION
 //3) HANDLING ALL LOGIC in RASPI ROS side and simply calling a service to change the LED with one byte of the led which to power... pROBABLY THIS IS BEST ??
@@ -452,6 +476,42 @@ void right_movement_blink(int ledArray[], int stepIntervalEncoderTicks) {
 
         }
     }
+
+}
+
+void leftLedNext(){
+
+    if (leftCurrentLed == pinCount-1){
+        leftCurrentLed = 0;
+    } else {
+        leftCurrentLed++;
+    }
+    
+    digitalWrite(left_ledPins[leftCurrentLed], HIGH);   // turn the LED on (HIGH is the voltage level)
+        if(leftCurrentLed == 0) {
+            digitalWrite(left_ledPins[pinCount-1], LOW);
+        } 
+        else {
+            digitalWrite(left_ledPins[leftCurrentLed-1], LOW);
+        }
+
+}
+
+void rightLedNext(){
+
+    if (rightCurrentLed == pinCount-1){
+        rightCurrentLed = 0;
+    } else {
+        rightCurrentLed++;
+    }
+    
+    digitalWrite(right_ledPins[rightCurrentLed], HIGH);   // turn the LED on (HIGH is the voltage level)
+        if(rightCurrentLed == 0) {
+            digitalWrite(right_ledPins[pinCount-1], LOW);
+        } 
+        else {
+            digitalWrite(right_ledPins[rightCurrentLed-1], LOW);
+        }
 
 }
 
